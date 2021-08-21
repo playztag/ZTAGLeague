@@ -424,5 +424,37 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 114477188894637726, guid: 666dd2b4392f0714eac49637de3da8f3, type: 3}
+      propertyPath: mobile_turned_on
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 114477188894637726, guid: 666dd2b4392f0714eac49637de3da8f3, type: 3}
+      propertyPath: joystick_turned_on
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 114477188894637726, guid: 666dd2b4392f0714eac49637de3da8f3, type: 3}
+      propertyPath: analogUpDownMovement
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 114477188894637726, guid: 666dd2b4392f0714eac49637de3da8f3, type: 3}
+      propertyPath: inputEditorSelection
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 114477188894637726, guid: 666dd2b4392f0714eac49637de3da8f3, type: 3}
+      propertyPath: left_analog_x_movement
+      value: 4
+      objectReference: {fileID: 0}
+    - target: {fileID: 114477188894637726, guid: 666dd2b4392f0714eac49637de3da8f3, type: 3}
+      propertyPath: left_analog_y_movement
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 114477188894637726, guid: 666dd2b4392f0714eac49637de3da8f3, type: 3}
+      propertyPath: right_analog_x_movement
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 114477188894637726, guid: 666dd2b4392f0714eac49637de3da8f3, type: 3}
+      propertyPath: right_analog_y_movement
+      value: 1
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 666dd2b4392f0714eac49637de3da8f3, type: 3}

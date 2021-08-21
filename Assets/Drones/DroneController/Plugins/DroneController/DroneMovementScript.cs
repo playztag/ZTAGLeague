@@ -35,7 +35,7 @@ namespace DroneController
             #region PUBLIC VARIABLES - EDITED THROUGH CUSTOM INSPECTOR
 
             [HideInInspector] public int _profileIndex;
-            [HideInInspector] public Profile[] profiles = new Profile[3]; // index = mode    ->      0 = advanced, 1 = intermediate, 2 = begginer
+            [HideInInspector] public Profile[] profiles = new Profile[3]; // index = mode    ->      0 = advanced, 1 = intermediate, 2 = beginner
 
             [HideInInspector] public int inputEditorSelection;
 

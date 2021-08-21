@@ -48,7 +48,7 @@ public class DroneMovementEditor : Editor {
         EditorGUILayout.BeginVertical("Box");
         EditorGUILayout.LabelField("Use this tab bar to customize flying settings. \n Edit to your own preferences. \n Selected one is applied to the drone and will drive with those settings.", EditorStyles.helpBox);
 
-        myScript._profileIndex = GUILayout.Toolbar(myScript._profileIndex, new string[] { "Advanced", "Intermediate", "Begginer" });
+        myScript._profileIndex = GUILayout.Toolbar(myScript._profileIndex, new string[] { "Advanced", "Intermediate", "Beginner" });
         switch (myScript._profileIndex)
         {
             default:
