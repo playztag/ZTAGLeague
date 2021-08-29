@@ -9,10 +9,14 @@ using Unity.MLAgents.Sensors;
 public class ChaseGoal : Agent
 {
     [SerializeField] DroneMovement DroneMovementObject;
+    [SerializeField] Movement otherDroneMovementScript;
     [SerializeField] GameObject goal;
 
     public bool isFrozen = false;
+    public Environment env;
 
+    public float taggingDistance = 20f;
+    public float taggingAngle = 60f;
 
     [Tooltip("Transform of IR Beam")]
     public Transform IrBeam;
@@ -20,7 +24,9 @@ public class ChaseGoal : Agent
     [Tooltip("My rear light")]
     public GameObject RearLight;
 
-    public Material unTaggedMaterial, taggedMaterial;   
+    public Material unTaggedMaterial, taggedMaterial;
+
+    public DroneBody otherDrone;
 
 
     private RayPerceptionSensorComponent3D rayHigh, rayMid, rayLow;
@@ -31,30 +37,106 @@ public class ChaseGoal : Agent
     float maxStepDistance = 0f;
 
     private DroneBody db;
+    
 
 
     public override void OnEpisodeBegin()
     {
         ////       Debug.Log("begin!");
+        bool inFrontOfOtherDrone = true;
+       // inFrontOfOtherDrone = Random.value > 0.5f;
 
-        ////put drone in a new location randomly
-        //transform.localPosition = new Vector3(Random.Range(-horizontalDistance, horizontalDistance),
-        //                                      Random.Range(0, verticalDistance),
-        //                                      Random.Range(-horizontalDistance, horizontalDistance));
+        MoveToSafeRandomPosition(inFrontOfOtherDrone);
 
-        ////put goal in a new location randomly
-        //goal.transform.localPosition = new Vector3(Random.Range(-horizontalDistance, horizontalDistance),
-        //                                   Random.Range(0, verticalDistance),
-        //                                   Random.Range(-horizontalDistance, horizontalDistance));
         rb = GetComponent<Rigidbody>();
         rb.velocity = Vector3.zero;
 
     }
 
+    /// <summary>
+    /// move the agent to a safe random position that doesn't collide with anything
+    /// if in front of flower, also point the beak at the flower
+    /// </summary>
+    /// <param name="inFrontOfOtherDrone">whether to choose a spot in front of a flower</param>
+    private void MoveToSafeRandomPosition(bool inFrontOfOtherDrone)
+    {
+        bool safePositionFound = false;
+        int attemptsRemaining = 100; // prevent an infinite loop
+        Vector3 potentialPosition = Vector3.zero;
+        Quaternion potentialRotation = new Quaternion();
+
+        // Loop until a safe position is found or we run out of attempts
+        while (!safePositionFound && attemptsRemaining > 0)
+        {
+            attemptsRemaining--;
+            if (inFrontOfOtherDrone)
+            {
+                //Pick a random flower
+                ;
+
+                // Position 10 to 20 cm in front of flower
+                float distanceFromOtherDrone = UnityEngine.Random.Range(5f, 15f);
+                potentialPosition = otherDrone.transform.position - otherDrone.transform.right * distanceFromOtherDrone;
+
+                // Point beak at flower (bird's head is center of transform)
+                Vector3 toDrone = otherDrone.transform.position - potentialPosition;
+                Debug.DrawRay(transform.position, toDrone,Color.yellow);
+                potentialRotation = Quaternion.LookRotation(toDrone, transform.forward);
+
+
+            }
+            else
+            {
+                // pick a random height from the ground
+                float height = UnityEngine.Random.Range(5f, 45f);
+                // pick a random radius from center of area
+                float radius = UnityEngine.Random.Range(2f, 90f);
+                //pick a random direction rotated from the Y axis;
+                Quaternion direction = Quaternion.Euler(0f, UnityEngine.Random.Range(-180f, 180f), 0f);
+
+                // Combine height, radius and direction to pick a potential position
+                
+                potentialPosition = env.transform.position + Vector3.up * height + direction * Vector3.forward * radius;
+
+                // Choose and set random starting yaw                
+                float yaw = UnityEngine.Random.Range(-180f, 180f);
+                potentialRotation = Quaternion.Euler(0f, yaw, 0f);
+            }
+
+            // check to see if the agent will collide with anything
+            Collider[] colliders = Physics.OverlapSphere(potentialPosition, 0.05f);
+
+            // Safe position has been found if no colliders overlapped
+            safePositionFound = colliders.Length == 0;
+        }
+
+        Debug.Assert(safePositionFound, "Could not find a safe position to spawn!");
+
+        // Set the position and rotation
+        transform.position = potentialPosition;
+        transform.rotation = potentialRotation;
+    }
+
     public override void CollectObservations(VectorSensor sensor)
     {
-        sensor.AddObservation(rb.velocity);
+        // observe the agents local rotation (4 observations)
+        sensor.AddObservation(transform.localRotation.normalized);
 
+        // get a vector from the beak tip to the nearest drone
+        Vector3 toDrone = otherDrone.transform.position - transform.position;
+
+        // observe a normalized vector pointing to the nearest drone (3 observations)
+        sensor.AddObservation(toDrone.normalized);
+
+        // observe if my drone is pointing at other drone (1 obs)
+        Vector3 toOtherDrone = otherDrone.transform.position - IrBeam.transform.position;
+        sensor.AddObservation(Vector3.Dot(toOtherDrone.normalized, otherDrone.transform.right.normalized));
+
+        // observe if my drone is facing same direction as other drone (1 obs)
+        sensor.AddObservation(Vector3.Dot(transform.right.normalized, otherDrone.transform.right.normalized));
+
+        // observe distance to other drone
+        sensor.AddObservation(Vector3.Distance(transform.position, otherDrone.transform.position)/50f);
     }
     public override void OnActionReceived(ActionBuffers actions)
     {
@@ -79,20 +161,33 @@ public class ChaseGoal : Agent
 
         if (!isFrozen)
         {
-            DroneMovementObject.W = actions.DiscreteActions[0] == 1 ? true : false;
-            DroneMovementObject.S = actions.DiscreteActions[0] == 2 ? true : false;
+            //DroneMovementObject.W = actions.DiscreteActions[0] == 1 ? true : false;
+            //DroneMovementObject.S = actions.DiscreteActions[0] == 2 ? true : false;
 
-            DroneMovementObject.A = actions.DiscreteActions[1] == 1 ? true : false;
-            DroneMovementObject.D = actions.DiscreteActions[1] == 2 ? true : false;
+            //DroneMovementObject.A = actions.DiscreteActions[1] == 1 ? true : false;
+            //DroneMovementObject.D = actions.DiscreteActions[1] == 2 ? true : false;
 
-            DroneMovementObject.I = actions.DiscreteActions[2] == 1 ? true : false;
-            DroneMovementObject.K = actions.DiscreteActions[2] == 2 ? true : false;
+            //DroneMovementObject.I = actions.DiscreteActions[2] == 1 ? true : false;
+            //DroneMovementObject.K = actions.DiscreteActions[2] == 2 ? true : false;
 
-            DroneMovementObject.J = actions.DiscreteActions[3] == 1 ? true : false;
-            DroneMovementObject.L = actions.DiscreteActions[3] == 2 ? true : false;
+            //DroneMovementObject.J = actions.DiscreteActions[3] == 1 ? true : false;
+            //DroneMovementObject.L = actions.DiscreteActions[3] == 2 ? true : false;
+
+            DroneMovementObject.customFeed_forward = -actions.ContinuousActions[0];
+            DroneMovementObject.customFeed_backward = actions.ContinuousActions[0];
+
+            DroneMovementObject.customFeed_leftward = -actions.ContinuousActions[1];
+            DroneMovementObject.customFeed_rightward = actions.ContinuousActions[1];
+
+            DroneMovementObject.customFeed_upward = actions.ContinuousActions[2];
+            DroneMovementObject.customFeed_downward = -actions.ContinuousActions[2];
+
+            DroneMovementObject.customFeed_rotateLeft = -actions.ContinuousActions[3];
+            DroneMovementObject.customFeed_rotateRight = actions.ContinuousActions[3];
+
         }
 
-        AddReward(-1f / MaxStep); // motivated to speed up search
+        //AddReward(-1f / MaxStep); // motivated to speed up search
 
         // if (actions.DiscreteActions[0] == 1)
         // {
@@ -127,23 +222,6 @@ public class ChaseGoal : Agent
 
     private void OnCollisionEnter(Collision other)
     {
-        //if (other.collider.tag == "Goal")
-        //{
-        //    AddReward(1);
-        //    Debug.Log("GOAL!!!");
-        //    horizontalDistance = increaseWithMax(horizontalDistance, 1, 100);
-        //    verticalDistance = increaseWithMax(verticalDistance, 1, 50);
-        //    MaxStep = (int)increaseWithMax((float)MaxStep, 10, 10000);
-        //    EndEpisode();
-        //}
-        //else
-        //{
-        //    AddReward(-1);
-        //    Debug.Log("crash!!!");
-        //    horizontalDistance = decreaseWithMax(horizontalDistance, 1, 10);
-        //    verticalDistance = decreaseWithMax(verticalDistance, 1, 10);
-        //    EndEpisode();
-        //}
         if (other.collider.CompareTag("Boundary") || other.collider.CompareTag("Obstacle"))
         {
             Debug.Log("Physical collision occured");
@@ -151,22 +229,39 @@ public class ChaseGoal : Agent
         }
     }
 
+    private void OnTriggerEnter(Collider other)
+    {       
+        if (other.CompareTag("Drone"))
+        {
+            Debug.Log("trigged!!! Drone" + other.tag);
+            Vector3 toOtherDrone = other.transform.position - IrBeam.transform.position;
+            if (Vector3.Angle(toOtherDrone.normalized, other.transform.right.normalized) < taggingAngle)
+            {
+                Debug.Log("HIT!!!");
+                other.GetComponent<DroneBody>().setLights();
+                otherDroneMovementScript.increaseDifficulty();
+                otherDroneMovementScript.chooseRandomWayPoint();
+            }
+        }
+    }
+    
+    
     private void OnTriggerStay(Collider other)
+
     {
         if (other.CompareTag("Drone"))
         {
             Vector3 toOtherDrone = other.transform.position - IrBeam.transform.position;
             //Debug.Log("dotproduct: " + Vector3.Dot(toOtherDrone.normalized, other.transform.right.normalized));
             //Debug.Log("angle between: " + Vector3.Angle(toOtherDrone.normalized, other.transform.right.normalized));
-            Debug.DrawRay(transform.position, toOtherDrone, Color.green);
-            Debug.DrawRay(other.transform.position, other.transform.right.normalized, Color.red);
-            if (Vector3.Angle(toOtherDrone.normalized, other.transform.right.normalized) < 30f)
+            Debug.DrawRay(transform.localPosition, toOtherDrone, Color.green);
+            Debug.DrawRay(other.transform.localPosition, other.transform.right.normalized, Color.red);
+            if (Vector3.Angle(toOtherDrone.normalized, other.transform.right.normalized) < taggingAngle)
             {
-                Debug.Log("HIT!!!" + other.gameObject.transform.childCount);
-                //db = (DroneBody) other;
-                other.GetComponent<DroneBody>().setLights();
 
-
+                Debug.Log("HIT CREDIT!!!");
+                AddReward(.1f);
+                otherDroneMovementScript.chooseRandomWayPoint();
             }
         }
 
@@ -187,6 +282,18 @@ public class ChaseGoal : Agent
         // if getting tagged by other drone
     }
 
+    private void Update()
+    {
+        if(Vector3.Distance(otherDrone.transform.position, transform.position) < taggingDistance)
+        {
+            Debug.Log("I'm close!!!");
+            AddReward(0.01f);
+        }
+
+        Debug.DrawRay(IrBeam.transform.position, otherDrone.transform.position - IrBeam.transform.position, Color.red);
+        
+    }
+
     private void OnTriggerExit(Collider other)
     {
         if (other.CompareTag("Drone"))
@@ -196,7 +303,6 @@ public class ChaseGoal : Agent
             //Debug.Log("angle between: " + Vector3.Angle(toOtherDrone.normalized, other.transform.right.normalized));
 
 
-            Debug.Log("HIT!!!" + other.gameObject.transform.childCount);
             other.GetComponent<DroneBody>().unsetLights();
 
 
@@ -206,122 +312,127 @@ public class ChaseGoal : Agent
 
     public override void Heuristic(in ActionBuffers actionsOut)
     {
-        //var continuousActionsOut = actionsOut.ContinuousActions;
-        var discreteActions = actionsOut.DiscreteActions;
+        var continuousActionsOut = actionsOut.ContinuousActions;
+        continuousActionsOut[0] = Input.GetAxis("Right_Y");
+        continuousActionsOut[1] = Input.GetAxis("Right_X");
+        continuousActionsOut[2] = Input.GetAxis("Left_Y");
+        continuousActionsOut[3] = Input.GetAxis("Left_X");
+
+        //var discreteActions = actionsOut.DiscreteActions;
 
         //pitch
-        if (Input.GetKey(KeyCode.Z))
-        {
+        //if (Input.GetKey(KeyCode.Z))
+        //{
 
-            discreteActions[0] = 1;
-        }
-        else if (Input.GetKey(KeyCode.X))
-        {
-            discreteActions[0] = 2;
-        }
-        else
-        {
-            discreteActions[0] = 0;
-        }
+        //    discreteActions[0] = 1;
+        //}
+        //else if (Input.GetKey(KeyCode.X))
+        //{
+        //    discreteActions[0] = 2;
+        //}
+        //else
+        //{
+        //    discreteActions[0] = 0;
+        //}
 
-        if(Input.GetAxis("Right_Y") > 0.2)
-        {
-            discreteActions[0] = 2;
-        }
-        else if (Input.GetAxis("Right_Y") < -0.2)
-        {
-            discreteActions[0] = 1;
-        }
-        else
-        {
-            discreteActions[0] = 0;
-        }
+        //if(Input.GetAxis("Right_Y") > 0.2)
+        //{
+        //    discreteActions[0] = 2;
+        //}
+        //else if (Input.GetAxis("Right_Y") < -0.2)
+        //{
+        //    discreteActions[0] = 1;
+        //}
+        //else
+        //{
+        //    discreteActions[0] = 0;
+        //}
 
-        //roll
-        if (Input.GetKey(KeyCode.C))
-        {
+        ////roll
+        //if (Input.GetKey(KeyCode.C))
+        //{
 
-            discreteActions[1] = 1;
-        }
-        else if (Input.GetKey(KeyCode.V))
-        {
-            discreteActions[1] = 2;
-        }
-        else
-        {
-            discreteActions[1] = 0;
-        }
-
-
-        if (Input.GetAxis("Right_X") > 0.2)
-        {
-            discreteActions[1] = 2;
-        }
-        else if (Input.GetAxis("Right_X") < -0.2)
-        {
-            discreteActions[1] = 1;
-        }
-        else
-        {
-            discreteActions[1] = 0;
-        }
+        //    discreteActions[1] = 1;
+        //}
+        //else if (Input.GetKey(KeyCode.V))
+        //{
+        //    discreteActions[1] = 2;
+        //}
+        //else
+        //{
+        //    discreteActions[1] = 0;
+        //}
 
 
-        //thrust
-        if (Input.GetKey(KeyCode.B))
-        {
+        //if (Input.GetAxis("Right_X") > 0.2)
+        //{
+        //    discreteActions[1] = 2;
+        //}
+        //else if (Input.GetAxis("Right_X") < -0.2)
+        //{
+        //    discreteActions[1] = 1;
+        //}
+        //else
+        //{
+        //    discreteActions[1] = 0;
+        //}
 
-            discreteActions[2] = 1;
-        }
-        else if (Input.GetKey(KeyCode.N))
-        {
-            discreteActions[2] = 2;
-        }
-        else
-        {
-            discreteActions[2] = 0;
-        }
 
-        if (Input.GetAxis("Left_Y") > 0.2)
-        {
-            discreteActions[2] = 1;
-        }
-        else if (Input.GetAxis("Left_Y") < -0.2)
-        {
-            discreteActions[2] = 2;
-        }
-        else
-        {
-            discreteActions[2] = 0;
-        }
+        ////thrust
+        //if (Input.GetKey(KeyCode.B))
+        //{
 
-        //yaw
-        if (Input.GetKey(KeyCode.M))
-        {
+        //    discreteActions[2] = 1;
+        //}
+        //else if (Input.GetKey(KeyCode.N))
+        //{
+        //    discreteActions[2] = 2;
+        //}
+        //else
+        //{
+        //    discreteActions[2] = 0;
+        //}
 
-            discreteActions[3] = 1;
-        }
-        else if (Input.GetKey(KeyCode.Comma))
-        {
-            discreteActions[3] = 2;
-        }
-        else
-        {
-            discreteActions[3] = 0;
-        }
+        //if (Input.GetAxis("Left_Y") > 0.2)
+        //{
+        //    discreteActions[2] = 1;
+        //}
+        //else if (Input.GetAxis("Left_Y") < -0.2)
+        //{
+        //    discreteActions[2] = 2;
+        //}
+        //else
+        //{
+        //    discreteActions[2] = 0;
+        //}
 
-        if (Input.GetAxis("Left_X") > 0.2)
-        {
-            discreteActions[3] = 2;
-        }
-        else if (Input.GetAxis("Left_X") < -0.2)
-        {
-            discreteActions[3] = 1;
-        }
-        else
-        {
-            discreteActions[3] = 0;
-        }
+        ////yaw
+        //if (Input.GetKey(KeyCode.M))
+        //{
+
+        //    discreteActions[3] = 1;
+        //}
+        //else if (Input.GetKey(KeyCode.Comma))
+        //{
+        //    discreteActions[3] = 2;
+        //}
+        //else
+        //{
+        //    discreteActions[3] = 0;
+        //}
+
+        //if (Input.GetAxis("Left_X") > 0.2)
+        //{
+        //    discreteActions[3] = 2;
+        //}
+        //else if (Input.GetAxis("Left_X") < -0.2)
+        //{
+        //    discreteActions[3] = 1;
+        //}
+        //else
+        //{
+        //    discreteActions[3] = 0;
+        //}
 
 
         // //roll

@@ -25,7 +25,7 @@ public class RearLight : MonoBehaviour
     public void unSetHitColor()
     {
         Renderer rend = transform.GetComponent<Renderer>();
-        rend.material = HitMaterial;
+        rend.material = UnhitMaterial;
     }
 
         // Update is called once per frame
