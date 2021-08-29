@@ -3,7 +3,18 @@
 --- !u!78 &1
 TagManager:
   serializedVersion: 2
-  tags: []
+  tags:
+  - Obstacle
+  - Goal
+  - Ball
+  - Boundary
+  - Drone
+  - Rear Collider A
+  - Rear Collider B
+  - Drone A
+  - Drone B
+  - Rear Collider
+  - IR Beam
   layers:
   - Default
   - TransparentFX

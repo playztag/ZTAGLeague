@@ -10,7 +10,7 @@ namespace DroneController
         [System.Serializable]
         public class Profile
         {
-		
+
             public int maxForwardSpeed;
             public int maxSidewaySpeed;
             public float slowDownTime;
@@ -50,7 +50,7 @@ namespace DroneController
             [Tooltip("Check this if you want to use your joystick. (DON'T FORGET TO ADJUST THE INPUT SETTINGS!!)")]
             [HideInInspector]
             public bool joystick_turned_on = false;
-            [HideInInspector] public CameraScript mainCamera;
+            //  [HideInInspector] public CameraScript mainCamera;
             [Tooltip("Part of the drone hierarchy that is used to 'tilt'.")]
             [HideInInspector]
             public Transform droneObject;
@@ -111,14 +111,14 @@ namespace DroneController
             public float tiltNoMovementSpeed = 0.3f;
             [HideInInspector] public float wantedForwardTilt = 20; // the desired tilt value of our drone when moving
 
-			#endregion
+            #endregion
 
-			#region PUBLIC VARIABLES - INPUT SETTINGS
+            #region PUBLIC VARIABLES - INPUT SETTINGS
 
-			[HideInInspector] public Rigidbody ourDrone;
-			[HideInInspector] public bool FlightRecorderOverride;
+            [HideInInspector] public Rigidbody ourDrone;
+            [HideInInspector] public bool FlightRecorderOverride;
 
-			[Header("JOYSTICK AXIS INPUT")]
+            [Header("JOYSTICK AXIS INPUT")]
             [HideInInspector]
             public string left_analog_x = "Horizontal";
             [HideInInspector] public string left_analog_y = "Vertical";
@@ -174,22 +174,22 @@ namespace DroneController
             [HideInInspector] public KeyCode joystick_swingLeft = KeyCode.JoystickButton2;
             [HideInInspector] public KeyCode joystick_swingRight = KeyCode.JoystickButton0;
 
-			/// <summary>
-			/// Custom Feed Input Variables
-			/// </summary>
-			[HideInInspector] public float customFeed_forward;
-			[HideInInspector] public float customFeed_backward;
-			[HideInInspector] public float customFeed_leftward;
-			[HideInInspector] public float customFeed_rightward;
-			[HideInInspector] public float customFeed_upward;
-			[HideInInspector] public float customFeed_downward;
-			[HideInInspector] public float customFeed_rotateLeft;
-			[HideInInspector] public float customFeed_rotateRight;
-			[HideInInspector] public bool customFeed; // do we use custom input for the inputs?
+            /// <summary>
+            /// Custom Feed Input Variables
+            /// </summary>
+            [HideInInspector] public float customFeed_forward;
+            [HideInInspector] public float customFeed_backward;
+            [HideInInspector] public float customFeed_leftward;
+            [HideInInspector] public float customFeed_rightward;
+            [HideInInspector] public float customFeed_upward;
+            [HideInInspector] public float customFeed_downward;
+            [HideInInspector] public float customFeed_rotateLeft;
+            [HideInInspector] public float customFeed_rotateRight;
+            [HideInInspector] public bool customFeed; // do we use custom input for the inputs?
 
-			#endregion
+            #endregion
 
-			#region PRIVATE VARIABLES
+            #region PRIVATE VARIABLES
 
             AudioSource droneSound;
 
@@ -209,14 +209,14 @@ namespace DroneController
             private float tiltAmountForward = 0;
             private float tiltVelocityForward;
 
-			[HideInInspector] public float Vertical_W = 0;
-			[HideInInspector] public float Vertical_S = 0;
-			[HideInInspector] public float Horizontal_A = 0;
-			[HideInInspector] public float Horizontal_D = 0;
-			[HideInInspector] public float Vertical_I = 0;
-			[HideInInspector] public float Vertical_K = 0;
-			[HideInInspector] public float Horizontal_J = 0;
-			[HideInInspector] public float Horizontal_L = 0;
+            [HideInInspector] public float Vertical_W = 0;
+            [HideInInspector] public float Vertical_S = 0;
+            [HideInInspector] public float Horizontal_A = 0;
+            [HideInInspector] public float Horizontal_D = 0;
+            [HideInInspector] public float Vertical_I = 0;
+            [HideInInspector] public float Vertical_K = 0;
+            [HideInInspector] public float Horizontal_J = 0;
+            [HideInInspector] public float Horizontal_L = 0;
 
             private Rect wRect = new Rect(10, 55, 14, 20);
             private Rect sRect = new Rect(10, 80, 14, 20);
@@ -234,14 +234,14 @@ namespace DroneController
             };
 
             #endregion
-            
+
             #region Mono Behaviour METHODS
 
             public virtual void Awake()
             {
                 ourDrone = GetComponent<Rigidbody>();
 
-                StartCoroutine(FindMainCamera());
+                //  StartCoroutine(FindMainCamera());
                 SetStartingRotation();
 
                 FindDroneSoundComponent();
@@ -710,84 +710,84 @@ namespace DroneController
             /// </summary>
             public void SettingControllerToInputSettings()
             {
-				if(customFeed == false)
-				{
-					if (joystick_turned_on == false)
-					{
-						Input_Mobile_Sensitvity_Calculation();//returns lineary pressed WSAD keys for PC and mobile, joystick has sensitvity builtin by default
-					}
-					else
-					{
-						Joystick_Input_Sensitivity_Calculation();
-					}
-
-					if (mobile_turned_on == true)
-					{
-						TouchCalculations();
-						CheckingIfInside();
-					}
-				}
-				else
-				{
-					CustomInputFeed();
-				}                
-            }
-
-			private void CustomInputFeed()
-			{
-				//forward
-				Vertical_W = customFeed_forward;
-				if (customFeed_forward > 0) W = true;
-				else W = false;
-				//backward
-				Vertical_S = -customFeed_backward;
-				if (customFeed_backward > 0) S = true;
-				else S = false;
-				//leftward
-				Horizontal_A = -customFeed_leftward;
-				if (customFeed_leftward > 0) A = true;
-				else A = false;
-				//rightward
-				Horizontal_D = customFeed_rightward;
-				if (customFeed_rightward > 0) D = true;
-				else D = false;
-				//upward
-				Vertical_I = customFeed_upward;
-				if (customFeed_upward > 0) I = true;
-				else I = false;
-				//downward
-				Vertical_K = -customFeed_downward;
-				if (customFeed_downward > 0) K = true;
-				else K = false;
-				//left rotation
-				Horizontal_J = -customFeed_rotateLeft;
-				if (customFeed_rotateLeft > 0) J = true;
-				else J = false;
-				//right rotation
-				Horizontal_L = customFeed_rotateRight;
-				if (customFeed_rotateRight > 0) L = true;
-				else L = false;
-			}
-
-			/// <summary>
-			/// Rotating the drone via barrel roll trick, adding 100 on the Y angle rotation
-			/// </summary>
-			public void RotationUpdateLoop_TrickRotation()
-            {
-                if (mainCamera.pickedMyDrone == true)
+                if (customFeed == false)
                 {
-                    if (mainCamera.ourDrone.transform == transform)
+                    if (joystick_turned_on == false)
                     {
-                        if ((Input.GetKeyDown(barrelRollLeft) || Input.GetKeyDown(joystick_barrelRollLeft)) && idle == false)
-                        {
-                            wantedYRotation -= 100;
-                        }
-                        if ((Input.GetKeyDown(barrelRollRight) || Input.GetKeyDown(joystick_barrelRollRight)) && idle == false)
-                        {
-                            wantedYRotation += 100;
-                        }
+                        Input_Mobile_Sensitvity_Calculation();//returns lineary pressed WSAD keys for PC and mobile, joystick has sensitvity builtin by default
+                    }
+                    else
+                    {
+                        Joystick_Input_Sensitivity_Calculation();
+                    }
+
+                    if (mobile_turned_on == true)
+                    {
+                        TouchCalculations();
+                        CheckingIfInside();
                     }
                 }
+                else
+                {
+                    CustomInputFeed();
+                }
+            }
+
+            private void CustomInputFeed()
+            {
+                //forward
+                Vertical_W = customFeed_forward;
+                if (customFeed_forward > 0) W = true;
+                else W = false;
+                //backward
+                Vertical_S = -customFeed_backward;
+                if (customFeed_backward > 0) S = true;
+                else S = false;
+                //leftward
+                Horizontal_A = -customFeed_leftward;
+                if (customFeed_leftward > 0) A = true;
+                else A = false;
+                //rightward
+                Horizontal_D = customFeed_rightward;
+                if (customFeed_rightward > 0) D = true;
+                else D = false;
+                //upward
+                Vertical_I = customFeed_upward;
+                if (customFeed_upward > 0) I = true;
+                else I = false;
+                //downward
+                Vertical_K = -customFeed_downward;
+                if (customFeed_downward > 0) K = true;
+                else K = false;
+                //left rotation
+                Horizontal_J = -customFeed_rotateLeft;
+                if (customFeed_rotateLeft > 0) J = true;
+                else J = false;
+                //right rotation
+                Horizontal_L = customFeed_rotateRight;
+                if (customFeed_rotateRight > 0) L = true;
+                else L = false;
+            }
+
+            /// <summary>
+            /// Rotating the drone via barrel roll trick, adding 100 on the Y angle rotation
+            /// </summary>
+            public void RotationUpdateLoop_TrickRotation()
+            {
+                // if (mainCamera.pickedMyDrone == true)
+                // {
+                //     if (mainCamera.ourDrone.transform == transform)
+                //     {
+                //         if ((Input.GetKeyDown(barrelRollLeft) || Input.GetKeyDown(joystick_barrelRollLeft)) && idle == false)
+                //         {
+                //             wantedYRotation -= 100;
+                //         }
+                //         if ((Input.GetKeyDown(barrelRollRight) || Input.GetKeyDown(joystick_barrelRollRight)) && idle == false)
+                //         {
+                //             wantedYRotation += 100;
+                //         }
+                //     }
+                // }
             }
 
             /// <summary>
@@ -796,42 +796,42 @@ namespace DroneController
             /// </summary>
             public void CameraCorrectPickAndTranslatingInputToWSAD()
             {
-				/*
+                /*
                  * If we picked the drone we wish to control and if its the same one as this one
                  * control only this drone, else remain uncontrolled
                  */
-				if (customFeed == true) return;
+                if (customFeed == true) return;
 
-                if ((mainCamera.pickedMyDrone == true && mainCamera.ourDrone.transform == transform))
-                {
-                    if (mobile_turned_on == false && joystick_turned_on == false)
-                    {
-                        W = (Input.GetKey(forward)) ? true : false;
-                        S = (Input.GetKey(backward)) ? true : false;
-                        A = (Input.GetKey(leftward)) ? true : false;
-                        D = (Input.GetKey(rightward)) ? true : false;
+                // if ((mainCamera.pickedMyDrone == true && mainCamera.ourDrone.transform == transform))
+                // {
+                //     if (mobile_turned_on == false && joystick_turned_on == false)
+                //     {
+                //         W = (Input.GetKey(forward)) ? true : false;
+                //         S = (Input.GetKey(backward)) ? true : false;
+                //         A = (Input.GetKey(leftward)) ? true : false;
+                //         D = (Input.GetKey(rightward)) ? true : false;
 
-                        I = (Input.GetKey(upward)) ? true : false;
-                        J = (Input.GetKey(rotateLeftward)) ? true : false;
-                        K = (Input.GetKey(downward)) ? true : false;
-                        L = (Input.GetKey(rotateRightward)) ? true : false;
-                    }
-                    if (mobile_turned_on == false && joystick_turned_on == true)
-                    {
+                //         I = (Input.GetKey(upward)) ? true : false;
+                //         J = (Input.GetKey(rotateLeftward)) ? true : false;
+                //         K = (Input.GetKey(downward)) ? true : false;
+                //         L = (Input.GetKey(rotateRightward)) ? true : false;
+                //     }
+                //     if (mobile_turned_on == false && joystick_turned_on == true)
+                //     {
 
-                        //only used for I and K
-                        if (analogUpDownMovement == false)
-                        {
-                            K = (Input.GetKey(downButton)) ? true : false;
-                            I = (Input.GetKey(upButton)) ? true : false;
-                        }
+                //         //only used for I and K
+                //         if (analogUpDownMovement == false)
+                //         {
+                //             K = (Input.GetKey(downButton)) ? true : false;
+                //             I = (Input.GetKey(upButton)) ? true : false;
+                //         }
 
-                        Left_Analog_Y_Translation();
-                        Left_Analog_X_Translation();
-                        Right_Analog_Y_Translation();
-                        Right_Analog_X_Translation();
-                    }
-                }
+                //         Left_Analog_Y_Translation();
+                //         Left_Analog_X_Translation();
+                //         Right_Analog_Y_Translation();
+                //         Right_Analog_X_Translation();
+                //     }
+                // }
             }
 
             /// <summary>
@@ -994,36 +994,36 @@ namespace DroneController
             /// </summary>
             public void Rotation()
             {
-				if(customFeed == false)
-				{
-					if (joystick_turned_on == false)
-					{
-						if (J)
-						{
-							wantedYRotation -= rotationAmount;
-						}
-						if (L)
-						{
-							wantedYRotation += rotationAmount;
-						}
-					}
-					else
-					{
-						wantedYRotation += rotationAmount * Horizontal_J; // || Horizontal_L it doesnt matter since it's the same axis...
-					}
-				}
-				else
-				{
-					if (J)
-					{
-						wantedYRotation += Horizontal_J * rotationAmount;
-					}
-					if (L)
-					{
-						wantedYRotation += Horizontal_L * rotationAmount;
-					}
-				}
-                
+                if (customFeed == false)
+                {
+                    if (joystick_turned_on == false)
+                    {
+                        if (J)
+                        {
+                            wantedYRotation -= rotationAmount;
+                        }
+                        if (L)
+                        {
+                            wantedYRotation += rotationAmount;
+                        }
+                    }
+                    else
+                    {
+                        wantedYRotation += rotationAmount * Horizontal_J; // || Horizontal_L it doesnt matter since it's the same axis...
+                    }
+                }
+                else
+                {
+                    if (J)
+                    {
+                        wantedYRotation += Horizontal_J * rotationAmount;
+                    }
+                    if (L)
+                    {
+                        wantedYRotation += Horizontal_L * rotationAmount;
+                    }
+                }
+
                 currentYRotation = Mathf.SmoothDamp(currentYRotation, wantedYRotation, ref rotationYVelocity, 0.25f);
             }
 
@@ -1055,21 +1055,21 @@ namespace DroneController
             /// <summary>
             /// Keeps trying to find camera until we find it.
             /// </summary>
-            IEnumerator FindMainCamera()
-            {
-                while (!mainCamera)
-                {
-                    try
-                    {
-                        mainCamera = GameObject.FindGameObjectWithTag("MainCamera").GetComponent<CameraScript>();
-                    }
-                    catch (System.Exception e)
-                    {
-                        print("<color=red>Missing main camera! check the tags!</color> -> " + e);
-                    }
-                    yield return new WaitForEndOfFrame();
-                }
-            }
+            // IEnumerator FindMainCamera()
+            // {
+            //     while (!mainCamera)
+            //     {
+            //         try
+            //         {
+            //             mainCamera = GameObject.FindGameObjectWithTag("MainCamera").GetComponent<CameraScript>();
+            //         }
+            //         catch (System.Exception e)
+            //         {
+            //             print("<color=red>Missing main camera! check the tags!</color> -> " + e);
+            //         }
+            //         yield return new WaitForEndOfFrame();
+            //     }
+            // }
 
             /// <summary>
             /// Using animation trigger like this because, I missed up the animation creation,
@@ -1102,7 +1102,7 @@ namespace DroneController
             }
 
             #endregion
- 
+
         }
     }
 }
